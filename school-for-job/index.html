@@ -1,0 +1,480 @@
+<html>
+
+<head>
+	<meta name="robots" content="noindex">
+	<!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+	    crossorigin="anonymous">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp"
+	    crossorigin="anonymous">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+	    crossorigin="anonymous"></script>
+
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.4.2/knockout-min.js" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.10/lodash.min.js"></script>
+	<script src="used.js"></script>
+	<script>console.log(schools)</script>
+	<style>
+		input,
+	textarea,
+	select {
+		font-size: 16px !important;
+	}
+
+		.bold {
+			font-weight: bold;
+		}
+
+		.search-higlight {
+			background-color: yellow;
+		}
+
+	</style>
+</head>
+
+<body>
+	<div class="panel panel-default">
+		<div class="panel-heading">
+			<div class="panel-title">
+				Filter Results
+			</div>
+		</div>
+		<div class="panel-body">
+			<div class="form-group">
+				<label>Search</label>
+				<input data-bind="textInput: filter.text" class="form-control" type="text" />
+			</div>
+			<div class="form-group">
+				<label>Only Show</label>
+				<select data-bind="value: filter.sector" class="form-control">
+					<option value="">--filter sector--</option>
+					<option value="PUBLIC">PUBLIC</option>
+					<option value="INDEPENDENT">INDEPENDENT</option>
+				</select>
+				<select data-bind="value: filter.direction" class="form-control">
+					<option value="">--filter direction--</option>
+					<option value="East">East</option>
+					<option value="West">West</option>
+				</select>
+				<select data-bind="value: filter.phase" class="form-control">
+					<option value="">--filter phase--</option>
+					<option value="COMBINED SCHOOL">COMBINED SCHOOL</option>
+					<option value="PRIMARY SCHOOL">PRIMARY SCHOOL</option>
+				</select>
+				<select data-bind="value: filter.distance" class="form-control">
+					<option value="">--filter fly distance--</option>
+					<option value="1">10km and less</option>
+					<option value="2">15km and less</option>
+					<option value="3">20km and less</option>
+					<option value="4">20km and more</option>
+				</select>
+			</div>
+			<a class="btn btn-default" data-bind="click: $root.clear">Clear</a>
+		</div>
+		<div class="panel-footer">
+			<div class="panel-title">
+				Total: <span data-bind="text: filterReults(data()).length"></span>
+			</div>
+		</div>
+	</div>
+
+	<div class="table-responsive">
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>School</th>
+					<th>Email</th>
+					<th>Phone</th>
+					<th>Address</th>
+					<th>Eagle Km</th>
+					<th>Status</th>
+				</tr>
+			</thead>
+			<tbody data-bind="foreach: filterReults(data())">
+				<tr data-bind="css: $root.getStatusTheme($data)">
+					<td>
+						<a href="javascript:void(0)" data-bind="click: $root.googleFor">
+							<span data-bind="html: $root.highlight(Name)"></span>
+						</a><br />
+						<strong>Phase: </strong><span data-bind="text:Phase"></span><br />
+						<strong>Sector: </strong><span data-bind="text:Sector"></span>
+					</td>
+					<td>
+						<a data-bind="attr:{'href': $root.getMailLink($data)}">
+							<span data-bind="html: $root.highlight(Email)"></span>
+						</a>
+					</td>
+					<td>
+						Cell: <a data-bind="attr:{'href': 'tel:' + Cell}"><span data-bind="text: Cell"></span></a><br />
+						Tel: <a data-bind="attr:{'href': 'tel:' + Tel}"><span data-bind="text: Tel"></span></a>
+					</td>
+					<td>
+						<a href="javascript:void(0)" data-bind="click: $root.showDir">
+							<span data-bind="html: $root.highlight(StreetAddress)"></span><br />
+							<span data-bind="html: $root.highlight(Suburb)"></span><br />
+							<span data-bind="html: $root.highlight(Town_City)"></span><br />
+							<span class="text-muted" data-bind="text:$root.getEastOrWest($data), css:{'text-success bold': $root.isEast($data)}"></span>
+						</a>
+					</td>
+					<td><span data-bind="text: FlyDistance"></span>KM</td>
+					<td>
+						<select data-bind="event: {change: $root.statusChanged}">
+							<option value="" data-bind="attr:  {'selected': $root.getItemValue($data) == ''}">None</option>
+							<option value="emailed" data-bind="attr:  {'selected': $root.getItemValue($data) == 'emailed'}">Emailed</option>
+							<option value="maybe" data-bind="attr:  {'selected': $root.getItemValue($data) == 'maybe'}">Maybe</option>
+							<option value="accepted" data-bind="attr:  {'selected': $root.getItemValue($data) == 'accepted'}">Accepted</option>
+							<option value="declined" data-bind="attr:  {'selected': $root.getItemValue($data) == 'declined'}">Declined</option>
+						</select>
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+
+	<script>
+		var model = new Model();
+		ko.applyBindings(model);
+
+		function Model() {
+			var self = this;
+
+			this.getSavedData = function () {
+				$.get("get.php", function (data) {
+					self.savedData(data);
+				});
+			}
+
+			this.info = {
+				status: {
+					notContacted: null,
+					emailed: "emailed",
+					maybe: "maybe",
+					accepted: "accepted",
+					declined: "declined"
+				},
+				currentLat: -34.0455073,
+				currentLong: 18.7636314,
+				toFarEagle: 35,
+				removeHtmlRegex: new RegExp('<[^>]*>', 'gi'),
+				insideTagRegex: new RegExp('<(.*?)>(.*?)<\/(.*?)>', 'gi')
+			};
+
+			this.filter = {
+				text: ko.observable(),
+				sector: ko.observable(),
+				direction: ko.observable(),
+				phase: ko.observable(),
+				distance: ko.observable()
+			};
+
+			this.data = ko.observableArray(schools);
+			this.savedData = ko.observableArray();
+
+			this.clear = function () {
+				self.filter.text(null);
+				self.filter.sector(null);
+				self.filter.direction(null);
+				self.filter.phase(null);
+				self.filter.distance(null);
+			};
+
+			this.statusChanged = function (item, event) {
+				updateStatus(item.Id, event.target.value);
+			}
+
+			this.filterReults = function (data) {
+				var results = _.clone(data);
+				var filterText = self.filter.text();
+				var sector = self.filter.sector();
+				var direction = self.filter.direction();
+				var phase = self.filter.phase();
+				var distance = self.filter.distance();
+
+				if (filterText) {
+					filterText = filterText.toUpperCase();
+					results = _.filter(results, function (item) {
+						return _.includes(item.Name.toUpperCase(), filterText) ||
+							_.includes(item.Suburb.toUpperCase(), filterText) ||
+							_.includes(item.StreetAddress.toUpperCase(), filterText) ||
+							_.includes(item.Email.toUpperCase(), filterText) ||
+							_.includes(item.Town_City.toUpperCase(), filterText);
+					});
+				}
+				if (sector) {
+					results = _.filter(results, function (item) {
+						return item.Sector == sector;
+					});
+				}
+				if (direction) {
+					results = _.filter(results, function (item) {
+						return self.getEastOrWest(item) == direction;
+					});
+				}
+				if (phase) {
+					results = _.filter(results, function (item) {
+						return item.Phase == phase;
+					});
+				}
+				if (distance) {
+					results = _.filter(results, function (item) {
+						switch (distance) {
+							case "1":
+								{
+									return item.FlyDistance <= 10;
+								}
+							case "2":
+								{
+									return item.FlyDistance <= 15;
+								}
+							case "3":
+								{
+									return item.FlyDistance <= 20;
+								}
+							case "4":
+								{
+									return item.FlyDistance >= 20;
+								}
+							default:
+								{
+									return true;
+								}
+						}
+					});
+				}
+
+				return results;
+			};
+
+			this.getEastOrWest = function (school) {
+				return school.Long > self.info.currentLong ? "East" : "West";
+			};
+
+
+			this.isEast = function (school) {
+				return school.Long > self.info.currentLong;
+			};
+
+			this.googleFor = function (school) {
+				window.open("https://www.google.co.za/search?q=" + school.Name);
+			};
+
+			this.googleFor = function (school) {
+				window.open("https://www.google.co.za/search?q=" + school.Name);
+			};
+
+			this.showDir = function (school) {
+				window.open("https://www.google.co.za/maps/dir/" + "-34.0455073,18.7636314" + "/" + school.Lat + "," + school.Long);
+			};
+
+			this.showMap = function (school) {
+				window.open("https://www.google.co.za/maps/@" + school.Lat + "," + school.Long + ",19z");
+			};
+
+			this.highlight = function (itemText) {
+				return highlightMatch(self.filter.text(), itemText);
+			};
+
+			this.getMailLink = function(item){
+				var emailBody = "\
+				Dear Principal\
+				<br /><br />I am applying for a possible vacant position for an intermediate phase teacher.\
+				<br /><br />A position at your school is very appealing to me as I am currently completing my PGCE and will be graduating in 2018. I had a look at your school and feel that it might be the environment where I can full fill my full potential as a new teacher. I would like to take this opportunity to introduce myself and why I would be a fantastic addition to your teaching staff.\
+				<br />I am a very strong, intuitive, focused individual with an inherent drive to be successful. If you look at my CV, I am confident that you are free to contact any of my referees who will confirm my credentials. Although I have listed several referees, I would make more managers/supervisors available. I pride myself on my loyalty towards my employer and towards learners in the classroom.\
+				<br />My previous employment has given my experience beyond the classroom but has also given me a clear vision of my real calling as a teacher. I believe my passion for teaching and enriching children's lives would make me an ideal candidate for this position. I am looking forward to starting my career in education and together with the school's vision contributing to the mental and emotional growth of learners.\
+				<br />I cannot hide the fact that relocating from Sedgefield to the beautiful area we now live in, fills me with much excitement, courage and energy to start a new career in education.\
+				<br />Please be advised that although I am applying for a specific position, I realize that as a teacher one needs to be flexible to satisfy the needs of the school and children. Therefor I pledge to be involved in any school related tasks and activities the school might require from me.\
+				<br />Thank you in advance".replace(/<br\s*\/?>/mg,"%0D%0A");
+				return "mailto:"+ item.Email + "?subject=Janine Kilian CV&body="+emailBody;
+			}
+
+			this.getStatusTheme = function (school) {
+				var savedData = self.savedData();
+				var entry = _.find(savedData, function (item) {
+					return item.Id == school.Id
+				});
+				if (!entry) {
+					return "";
+				}
+				switch (entry.Status) {
+					case self.info.status.emailed:
+						{
+							return "info";
+						}
+					case self.info.status.maybe:
+						{
+							return "warning";
+						}
+					case self.info.status.accepted:
+						{
+							return "success";
+						}
+					case self.info.status.declined:
+						{
+							return "danger";
+						}
+					default:
+						{
+							return "";
+						}
+				}
+			}
+
+			this.showStatus = function (school) {
+				var savedData = self.savedData();
+				var entry = _.find(savedData, function (item) {
+					return item.Id == school.Id
+				});
+				return !entry ? "n/a" : statusText(entry.Status);
+
+				function statusText(status) {
+					switch (status) {
+						case "":
+						case self.info.status.notContacted:
+							{
+								return "not contacted";
+							}
+						case self.info.status.emailed:
+							{
+								return "emailed";
+							}
+						case self.info.status.maybe:
+							{
+								return "maybe";
+							}
+						case self.info.status.accepted:
+							{
+								return "accepted";
+							}
+						case self.info.status.declined:
+							{
+								return "declined";
+							}
+						default:
+							{
+								return "n/a";
+							}
+
+					}
+				}
+			};
+
+			this.updateToEmailed = function (item) {
+				updateStatus(item.Id, self.info.status.emailed);
+			}
+			this.updateToAccepted = function (item) {
+				updateStatus(item.Id, self.info.status.accepted);
+			}
+			this.updateToDeclined = function (item) {
+				updateStatus(item.Id, self.info.status.declined);
+			}
+			this.updateToMaybe = function (item) {
+				updateStatus(item.Id, self.info.status.maybe);
+			}
+			this.updateToNone = function (item) {
+				updateStatus(item.Id, null);
+			}
+
+			this.getItemValue = function (school) {
+				var savedData = self.savedData();
+				var entry = _.find(savedData, function (item) {
+					return item.Id == school.Id
+				});
+				return !entry ? "" : statusValue(entry.Status);
+
+				function statusValue(status) {
+					switch (status) {
+						case "":
+						case self.info.status.notContacted:
+							{
+								return "not contacted";
+							}
+						case self.info.status.emailed:
+							{
+								return "emailed";
+							}
+						case self.info.status.maybe:
+							{
+								return "maybe";
+							}
+						case self.info.status.accepted:
+							{
+								return "accepted";
+							}
+						case self.info.status.declined:
+							{
+								return "declined";
+							}
+						default:
+							{
+								return "";
+							}
+					}
+				}
+
+			}
+
+			function updateStatus(id, status) {
+				var savedData = self.savedData();
+				var entry = _.find(savedData, function (item) {
+					return item.Id == id
+				});
+				entry ? (entry.Status = status) : null;
+				self.savedData.valueHasMutated();
+				$.post("update.php", ko.toJSON({
+					Id: id,
+					Status: status ? status : null
+				}), function () {
+
+					//self.getSavedData();
+				});
+			}
+
+			function highlightMatch(filterText, text) {
+				filterText = filterText ? escapeRegExp(filterText) : "";
+
+				if (!filterText || !text) {
+					return text;
+				}
+
+				return text.replace(new RegExp('(' + filterText + ')', 'gi'), '<span class="search-higlight">$1</span>');
+			};
+
+			function escapeRegExp(str) {
+				return str ? str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&") : '';
+			};
+
+			function init() {
+				self.getSavedData();
+			};
+
+			init();
+
+
+		}
+	</script>
+	<script>
+		var test = {
+			"Id": 0,
+			"Name": "HEBRON CHRISTENSKOOL",
+			"Email": "admin@hebronchristenskool.co.za",
+			"Long": 18.668629,
+			"Lat": -33.880724,
+			"Cell": "0722658410",
+			"Tel": "0219394145",
+			"FlyDistance": 20,
+			"Suburb": "BELLVILLE",
+			"Town_City": "CITY OF CAPE TOWN",
+			"StreetAddress": "Hebron Straat 3",
+			"Sector": "INDEPENDENT",
+			"Phase": "PRIMARY SCHOOL",
+			"Kids": null
+		};
+	</script>
+</body>
+
+</html>
